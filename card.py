@@ -11,7 +11,11 @@ class Card:
         'RJ': 17
     }
 
-    def __init__(self, index):
+    def __init__(self, index, suit):
+        """
+        index = 数字
+        suit = 花色
+        """
         try:
             self.val = int(index)
             if self.val == 2:
@@ -20,17 +24,24 @@ class Card:
             self.val = self.valRef[index]
 
         self.string = index
+        self.suit = suit
 
     def __str__(self):
+        if self.val == 10:
+            return """
+|{1}   |
+| {0} |
+|    |
+            """.format(self.string, self.suit)
         if self.val < 16:
             return """
-|   |
+|{1}  |
 | {0} |
 |   |
-""".format(self.string)
+""".format(self.string, self.suit)
         else:
             return """
-|    |
+|{1}  |
 | {0} |
 |    |
-""".format(self.string)
+""".format(self.string, self.suit)
