@@ -33,7 +33,7 @@ class Card:
 | {0} |
 |    |
             """.format(self.string, self.suit)
-        if self.val < 16:
+        elif self.val < 16:
             return """
 |{1}  |
 | {0} |
