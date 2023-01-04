@@ -57,19 +57,20 @@ class Deck:
 
 
 class User:
-    def __init__(self, order, points, cards):
+    def __init__(self, name, order, points, player_deck, dizhu):
         """
+        name = 玩家名 - string
         dizhu = 地主 - bool
         order = 出牌顺序 - int
         win = 获胜次数 - int
         points = 积分？不确定 - int
-        name = string
         """
-        self.bool = False
+        self.dizhu = dizhu
         self.order = order
         self.win = 0
         self.points = 0
         self.deck = player_deck
+        self.name = name
 
     def play_turn(self):
         pass
