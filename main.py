@@ -56,6 +56,25 @@ def distribute_cards(game_deck):
     return [dizhu_cards, p1cards, p2cards, p3cards]
 
 
+def turn(playerslist, priority):
+    playerDecks = [x.deck for x in playerslist]
+    playerNames = [x.name for x in playerslist]
+
+    while True:
+        print("\n    -------------------------------   \n")
+        print("    It's", playerNames[priority], "\'s turn now")
+        print("\n", playerNames[priority], "\'s current deck:")
+        print(playerDecks[priority])
+        print("\n What's your move? (Type in values of your move, separated with space.")
+        move = input(playerNames[priority] + " > ").split(" ")
+        # print(move)
+
+        playerDecks[priority].play_card(move)
+        print(playerDecks[priority])  # player's deck after playing card
+
+        # todo pass the card priority down to next person
+
+
 players = []
 for i in range(3):
     print()
@@ -120,3 +139,9 @@ print(c.Deck(split_deck[0]))
 players[dizhu].deck.extend(split_deck[0])
 print("The dizhu's cards after extend are: ")
 print(players[dizhu].deck)
+
+
+print("\n\n    --------  new game  --------    \n\n")
+turn(players, dizhu)
+
+

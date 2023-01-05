@@ -20,6 +20,8 @@ class Card:
         line2 = 第二行的string
         line3 = 第三行的string
         """
+        self.string = index
+
         try:
             self.val = int(index)
             if self.val == 2:
@@ -56,6 +58,19 @@ class Deck:
         self.card_list.extend(dizhu_cards)
         # Sort again
         self.card_list.sort(key=lambda x: (x.val, x.suit))
+
+    def play_card(self, values, last=[]):
+        originaldeck = self.card_list[:]
+        for i in values:
+            deckvalues = [x.string for x in self.card_list]
+            try:
+                idx = deckvalues.index(i)
+                # print("idx:", idx)
+                self.card_list.pop(idx)
+            except ValueError:
+                print("Invalid input: card not found in your deck")
+                self.card_list = originaldeck
+                return
 
     def __str__(self):
         # 还是把生成line放在这里，因为之后拍的变化会很大，最好自己每次print出来的时候就重新生成
