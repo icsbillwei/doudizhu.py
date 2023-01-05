@@ -47,12 +47,21 @@ class Card:
 
 class Deck:
 
-    def __init__(self, line1, line2, line3):
-        self.line1 = line1
-        self.line2 = line2
-        self.line3 = line3
+    def __init__(self, card_list):
+        # card_list = list[Cards]
+        self.card_list = card_list
+
+    def extend(self, dizhu_cards):
+        # Extend into the card_list
+        self.card_list.extend(dizhu_cards)
+        # Sort again
+        self.card_list.sort(key=lambda x: (x.val, x.suit))
 
     def __str__(self):
+        # 还是把生成line放在这里，因为之后拍的变化会很大，最好自己每次print出来的时候就重新生成
+        self.line1 = " ".join([x.line1 for x in self.card_list])
+        self.line2 = " ".join([x.line2 for x in self.card_list])
+        self.line3 = " ".join([x.line3 for x in self.card_list])
         return "{}\n{}\n{}\n".format(self.line1, self.line2, self.line3)
 
 
@@ -60,17 +69,18 @@ class User:
     def __init__(self, name, order, points, player_deck, dizhu):
         """
         name = 玩家名 - string
-        dizhu = 地主 - bool
         order = 出牌顺序 - int
-        win = 获胜次数 - int
         points = 积分？不确定 - int
+        player_deck = 牌组 - Deck object
+        win = 获胜次数 - int
+        dizhu = 地主 - bool
         """
-        self.dizhu = dizhu
-        self.order = order
-        self.win = 0
-        self.points = 0
-        self.deck = player_deck
         self.name = name
+        self.order = order
+        self.points = points
+        self.win = 0
+        self.deck = player_deck
+        self.dizhu = dizhu
 
     def play_turn(self):
         pass
