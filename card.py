@@ -59,7 +59,7 @@ class Deck:
         # Sort again
         self.card_list.sort(key=lambda x: (x.val, x.suit))
 
-    def play_card(self, values, last=[]):
+    def play_card(self, values, last):
         originaldeck = self.card_list[:]
         for i in values:
             deckvalues = [x.string for x in self.card_list]
@@ -70,7 +70,14 @@ class Deck:
             except ValueError:
                 print("Invalid input: card not found in your deck")
                 self.card_list = originaldeck
-                return
+                return False
+
+        if len(last) == 0:  # if the input is first in the round
+            return True
+        else:  # looks at the card last person played
+            # todo: implement出牌的所有种类，然后return这次input是不是能压住上家出的牌
+            pass
+
 
     def __str__(self):
         # 还是把生成line放在这里，因为之后拍的变化会很大，最好自己每次print出来的时候就重新生成
