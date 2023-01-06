@@ -65,14 +65,16 @@ def turn(playerslist, priority):
     curr_player = priority
     last_move = []
     num_passes = 0
-    end_of_round = False
-    while not end_of_round:  # exit loop when a round with one round finishes
+    beginning_of_round = True
+    while True:  # exit loop when a round with one round finishes
         move = playerslist[curr_player].play_turn(last_move)
-        print(move)
+        while move == [] and beginning_of_round and curr_player == priority:
+            print("You are the first to play in this round, you cannot pass.")
+            move = playerslist[curr_player].play_turn(last_move)
         # Check if this player has won
         if len(playerslist[curr_player].deck.card_list) == 0:
             return 100 + curr_player
-
+        beginning_of_round = False
         curr_player += 1
         if curr_player > 2:
             curr_player = 0
@@ -125,7 +127,7 @@ for i, player in enumerate(players):
     # Friendly reminder for dizhu wanters
     if i != 0 and i != dizhu:
         print("You must call higher than", max(points), "if you want to be the 地主")
-    point = int(input("How many points would you like to call? (1 - 3)"))
+    point = int(input("How many points would you like to call? (1 - 3) > "))
     points[i] = point
 
     if point == 3 and i == dizhu:
@@ -161,8 +163,6 @@ print(players[dizhu].deck)
 print("\n\n    --------  new game  --------    \n")
 # turn是一种牌的回合
 # 如果回合结束的话开启下一个turn
-# todo: 从一个回合转到下一个回合
-# todo: 如果有人赢了，结束这一局
 while dizhu < 100:
     dizhu = turn(players, dizhu)
 print("Congratulations player" ,players[dizhu%100])

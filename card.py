@@ -80,15 +80,13 @@ class Deck:
 
         removed_deck.sort(key=lambda x: (x.val, x.suit))
         print("XXXXXXXXXXX", Deck(removed_deck).identify_type())
-        if len(last) == 0 and (Deck(removed_deck).identify_type() != ""
-                               and Deck(removed_deck).identify_type() is not None):  # if the input is first in the round
+        if len(last) == 0 and (Deck(removed_deck).identify_type() is not None):  # if the input is first in the round
             return removed_deck
         elif len(last) == 0:  # if the input is first in the round
             print("Invalid input: not a valid set of cards to play")
             self.card_list = originaldeck
             return None
         else:  # looks at the card last person played
-            print(removed_deck)
             if valid_play(last, removed_deck) is True:
                 return removed_deck
             elif valid_play(last, removed_deck) is False:
@@ -108,8 +106,15 @@ class Deck:
         return "{}\n{}\n{}\n".format(self.line1, self.line2, self.line3)
 
     def identify_type(self):
+        # 炸弹
+        if len(self.card_list) == 4 and self.card_list[0].val == self.card_list[1].val == self.card_list[2].val == \
+             self.card_list[3].val:
+            return "Bomb"
+        # 王炸
+        elif len(self.card_list) == 2 and self.card_list[0].string == "BJ" and self.card_list[1].string == "RJ":
+            return "Joker Bomb"
         # 单牌
-        if len(self.card_list) == 1:
+        elif len(self.card_list) == 1:
             return "Single"
         # 对子
         elif len(self.card_list) == 2 and self.card_list[0].val == self.card_list[1].val:
@@ -122,41 +127,31 @@ class Deck:
             if self.card_list[0].val == self.card_list[1].val == self.card_list[2].val \
                     or self.card_list[1].val == self.card_list[2].val == self.card_list[3].val:
                 return "Triple + Single"
-        # 三带二
-        elif len(self.card_list) == 5:  # todo: fix this
-            print("ZZZZZZZZZZZ 3 + 2")  # debug
-            if (self.card_list[0].val == self.card_list[1].val == self.card_list[2].val \
+        elif len(self.card_list) >= 5:
+            # 三带二
+            if len(self.card_list) == 5 and ((self.card_list[0].val == self.card_list[1].val == self.card_list[2].val \
                 and self.card_list[3].val == self.card_list[4].val) \
                     or (self.card_list[2].val == self.card_list[3].val == self.card_list[4].val \
-                        and self.card_list[0].val == self.card_list[1].val):
+                        and self.card_list[0].val == self.card_list[1].val)):
                 return "Triple + Double"
-        elif len(self.card_list) >= 5:  # todo: fix this
             # 顺子
-            print("ZZZZZZZZZZZ shunzi")
             straight = True
             for index in range(len(self.card_list) - 1):
-                if self.card_list[index] + 1 != self.card_list[index + 1]:
+                if self.card_list[index].val + 1 != self.card_list[index + 1].val:
                     straight = False
                     break
             if straight: return "Straight"
             # 连对
-            if len(self.card_list % 2 == 0):  # length must be a multiple of 2
+            if len(self.card_list) % 2 == 0:  # length must be a multiple of 2
                 consec_pairs = True
-                print("ZZZZZZZZZZZ 334455")
                 for index in range(0, len(self.card_list) - 1, 2):
-                    if self.card_list[index] != self.card_list[index + 1]:
+                    if self.card_list[index].val != self.card_list[index + 1].val:
                         consec_pairs = False
                 if consec_pairs: return "Consecutive Pairs"
         # todo: 飞机
         # 四个（炸弹）
-        elif len(self.card_list) == 4 and self.card_list[0].val == self.card_list[1].val == self.card_list[2].val == \
-                self.card_list[3].val:
-            return "Bomb"
-        # 王炸
-        elif len(self.card_list) == 2 and self.card_list[0].string == "BJ" and self.card_list[1].string == "RJ":
-            return "Joker Bomb"
         else:
-            return ""
+            return None
 
 
 class User:
@@ -177,7 +172,6 @@ class User:
         self.dizhu = dizhu
 
     def play_turn(self, last_move):
-        # first - bool - if this person is the first of a round to play
         print("\n-------------------------------\n")
         print("It's " + self.name + "\'s turn now (player number", str(self.order + 1) + ")")
         valid_input = False
@@ -210,16 +204,20 @@ def valid_play(last_played: list[Card], played: list[Card]):
     played: what the player played this time, list[Cards]
     return: whether if it's a valid play - bool
     """
-    print(played,last_played)
     last_played_type = Deck(last_played).identify_type()
     played_type = Deck(played).identify_type()
     # print(" >>>>>>>>>>>>>>>>>>>>>>>>", played_type)
 
-    if last_played_type == played_type:
-        # 单牌，对子，三个，炸弹，顺子，连对比较方式一样
-        if played_type == "Single" or played_type == "Double" or played_type == "Triple" or played_type == "Bomb" \
-                or played_type == "Straight" or played_type == "Consecutive Pairs":
+    if last_played_type == played_type: # 如果和上一轮种类相同
+        # 单牌，对子，三个，炸弹，比较方式一样
+        if played_type == "Single" or played_type == "Double" or played_type == "Triple" or played_type == "Bomb":
             return played[0].val > last_played[0].val
+        # 顺子，连对比较方式一样
+        elif played_type == "Straight" or played_type == "Consecutive Pairs":
+            if len(last_played) != len(played): # 确保总共的牌数相同
+                return None
+            else:
+                return played[0].val > last_played[0].val
         # 三带一
         elif played_type == "Triple + Single":
             # 直接比较第二位这样不管单排在前还是后都在比较三个的
