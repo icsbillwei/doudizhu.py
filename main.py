@@ -57,35 +57,36 @@ def distribute_cards(game_deck):
 
 
 def turn(playerslist, priority):
+    """
+    playerslist: all players. - List[User]
+    priority: the one who is the first of a round. - int index of curr player
+    player who is the start of the next round. - int player index who goes first for the next round
+    """
     curr_player = priority
-    player_decks = [x.deck for x in playerslist]
-    player_names = [x.name for x in playerslist]
     last_move = []
-
-    while True:  # exit loop when a round with one type of card finishes
-        print("\n    -------------------------------   \n")
-        print("    It's", player_names[curr_player], "\'s turn now (player number", str(curr_player + 1) + ")")
-        while True:  # exit loop until a valid input is received
-            print("\n", player_names[curr_player], "\'s current deck:")
-            print(player_decks[curr_player])
-            print("\n What's your move? (Type in values of your move, separated with space.")
-            print("type p to pass")
-            move = input(player_names[curr_player] + " > ").split(" ")
-            if move[0] == "p":
-                break
-
-            # print(move)
-            if player_decks[priority].play_card(move, last_move):  # if input is valid
-                print(player_decks[priority])  # player's deck after playing card
-                last_move = move
-
+    num_passes = 0
+    end_of_round = False
+    while not end_of_round:  # exit loop when a round with one round finishes
+        move = playerslist[curr_player].play_turn(last_move)
+        print(move)
+        # Check if this player has won
+        if len(playerslist[curr_player].deck.card_list) == 0:
+            return 100 + curr_player
 
         curr_player += 1
         if curr_player > 2:
             curr_player = 0
+        print("next player", curr_player+1)
 
-        # todo: 检测如果一个回合结束了，然后break和return
-
+        # Check if the round has finished
+        if len(move) == 0:
+            num_passes += 1
+        elif len(move) > 0:
+            num_passes = 0
+        if num_passes == 2:
+            print("No one responded to", playerslist[curr_player].name + "\'s cards.")
+            return curr_player
+        last_move = move
 
 players = []
 for i in range(3):
@@ -153,11 +154,12 @@ print("The dizhu's cards after extend are: ")
 print(players[dizhu].deck)
 
 
-print("\n\n    --------  new game  --------    \n\n")
+print("\n\n    --------  new game  --------    \n")
 # turn是一种牌的回合
 # 如果回合结束的话开启下一个turn
 # todo: 从一个回合转到下一个回合
 # todo: 如果有人赢了，结束这一局
-turn(players, dizhu)
-
+while dizhu < 100:
+    dizhu = turn(players, dizhu)
+print("Congratulations player" ,players[dizhu%100])
 
