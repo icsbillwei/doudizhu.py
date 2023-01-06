@@ -6,7 +6,6 @@ class Card:
         'Q': 12,
         'K': 13,
         'A': 14,
-        '2': 15,
         'BJ': 16,
         'RJ': 17
     }
@@ -65,6 +64,7 @@ class Deck:
         last: list[Cards] played last time
         return: removed_deck list[Cards] OR None if invalid
         """
+        # print(">>>>>", [x.val for x in last])
         originaldeck = self.card_list[:]
         removed_deck = []
         for i in values:
@@ -79,7 +79,9 @@ class Deck:
                 return None
 
         removed_deck.sort(key=lambda x: (x.val, x.suit))
-        if len(last) == 0 and Deck(removed_deck).identify_type() != "":  # if the input is first in the round
+        print("XXXXXXXXXXX", Deck(removed_deck).identify_type())
+        if len(last) == 0 and (Deck(removed_deck).identify_type() != ""
+                               and Deck(removed_deck).identify_type() is not None):  # if the input is first in the round
             return removed_deck
         elif len(last) == 0:  # if the input is first in the round
             print("Invalid input: not a valid set of cards to play")
@@ -121,14 +123,16 @@ class Deck:
                     or self.card_list[1].val == self.card_list[2].val == self.card_list[3].val:
                 return "Triple + Single"
         # 三带二
-        elif len(self.card_list) == 5:
+        elif len(self.card_list) == 5:  # todo: fix this
+            print("ZZZZZZZZZZZ 3 + 2")  # debug
             if (self.card_list[0].val == self.card_list[1].val == self.card_list[2].val \
                 and self.card_list[3].val == self.card_list[4].val) \
                     or (self.card_list[2].val == self.card_list[3].val == self.card_list[4].val \
                         and self.card_list[0].val == self.card_list[1].val):
                 return "Triple + Double"
-        elif len(self.card_list) >= 5:
+        elif len(self.card_list) >= 5:  # todo: fix this
             # 顺子
+            print("ZZZZZZZZZZZ shunzi")
             straight = True
             for index in range(len(self.card_list) - 1):
                 if self.card_list[index] + 1 != self.card_list[index + 1]:
@@ -138,6 +142,7 @@ class Deck:
             # 连对
             if len(self.card_list % 2 == 0):  # length must be a multiple of 2
                 consec_pairs = True
+                print("ZZZZZZZZZZZ 334455")
                 for index in range(0, len(self.card_list) - 1, 2):
                     if self.card_list[index] != self.card_list[index + 1]:
                         consec_pairs = False
@@ -179,6 +184,10 @@ class User:
         while valid_input is False:  # exit loop until a valid input is received
             print("\n" + self.name + "\'s current deck:")
             print(self.deck)
+            if len(last_move) != 0:
+                print("\n You must play a hand that is larger than:")
+                last = Deck(last_move)
+                print(last)
             print("\nWhat's your move? (Type in values of your move, separated with space, or type p to pass.)")
             move = input(self.name + " > ").upper().split(" ")
             if move == ["P"]:
@@ -204,6 +213,7 @@ def valid_play(last_played: list[Card], played: list[Card]):
     print(played,last_played)
     last_played_type = Deck(last_played).identify_type()
     played_type = Deck(played).identify_type()
+    # print(" >>>>>>>>>>>>>>>>>>>>>>>>", played_type)
 
     if last_played_type == played_type:
         # 单牌，对子，三个，炸弹，顺子，连对比较方式一样

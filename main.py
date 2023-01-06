@@ -86,7 +86,11 @@ def turn(playerslist, priority):
         if num_passes == 2:
             print("No one responded to", playerslist[curr_player].name + "\'s cards.")
             return curr_player
-        last_move = move
+
+        if len(move) != 0:  # 如果上一个玩家pass了的话, last_move不会是空白
+            last_move = move
+        else:
+            pass
 
 players = []
 for i in range(3):
