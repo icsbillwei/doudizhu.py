@@ -10,6 +10,24 @@ class Card:
         'RJ': 17
     }
 
+    valEmoteRef = {  # translate value into remote
+        15: ":two:",
+        3: ":three:",
+        4: ":four:",
+        5: ":five:",
+        6: ":six:",
+        7: ":seven:",
+        8: ":eight:",
+        9: ":nine:",
+        10: ":keycap_ten:",
+        11: ":regional_indicator_j:",
+        12: ":regional_indicator_q:",
+        13: ":regional_indicator_k:",
+        14: ":regional_indicator_a:",
+        16: ":bj:",
+        17: ":rj:"
+    }
+
     def __init__(self, index, suit):
         """
         index = 数字
@@ -29,6 +47,7 @@ class Card:
             self.val = self.valRef[index]
 
         self.suit = suit
+        '''
         if self.val == 10:
             self.line1 = "|" + suit + "   |"
             self.line2 = "| " + str(index) + " |"
@@ -41,9 +60,28 @@ class Card:
             self.line1 = "|    |"
             self.line2 = "| " + str(index) + " |"
             self.line3 = "|    |"
+        '''
+        '''
+        For discord the card is now two lines: a suit emote over number emote
+        '''
+        if self.val < 16:
+            self.line1 = suit
+            self.line2 = self.valEmoteRef[self.val]
+        else:
+            self.line2 = ":black_joker:"
+            if self.val == 16:
+                self.line1 = ":white_large_square:"
+            elif self.val == 17:
+                self.line1 = ":red_square:"
 
+    '''
     def __str__(self):
         return "{}\n{}\n{}\n".format(self.line1, self.line2, self.line3)
+    '''
+
+    async def print(self, chan):  # chan = channel
+        await chan.send(self.line1)
+        await chan.send(self.line2)
 
 
 class Deck:
@@ -79,7 +117,7 @@ class Deck:
                 return None
 
         removed_deck.sort(key=lambda x: (x.val, x.suit))
-        print("XXXXXXXXXXX", Deck(removed_deck).identify_type())
+        print("Type of hand:", Deck(removed_deck).identify_type())
         if len(last) == 0 and (Deck(removed_deck).identify_type() is not None):  # if the input is first in the round
             return removed_deck
         elif len(last) == 0:  # if the input is first in the round
@@ -98,12 +136,21 @@ class Deck:
                 self.card_list = originaldeck
                 return None
 
+    '''
     def __str__(self):
         # 还是把生成line放在这里，因为之后拍的变化会很大，最好自己每次print出来的时候就重新生成
         self.line1 = " ".join([x.line1 for x in self.card_list])
         self.line2 = " ".join([x.line2 for x in self.card_list])
         self.line3 = " ".join([x.line3 for x in self.card_list])
         return "{}\n{}\n{}\n".format(self.line1, self.line2, self.line3)
+    '''
+    async def print(self, chan):
+        line1 = "  ".join([x.line1 for x in self.card_list])
+        line2 = "  ".join([x.line2 for x in self.card_list])
+        # print(line1)
+        # print(line2)
+        await chan.send("> " + line1)
+        await chan.send("> " + line2)
 
     def identify_type(self):
         # 炸弹

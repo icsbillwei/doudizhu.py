@@ -1,5 +1,10 @@
 import card as c
 import random
+import discord
+from discord.ext import commands
+
+
+# bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 # def print_deck(list_cards):
 #     """
@@ -16,8 +21,10 @@ import random
 
 def generate_deck():
     numbers = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2']
-    #suit = ["\u2660", "\u2665", "\u2666", "\u2663"]
-    suit = ["A", "B", "C", "D"]
+    # suit = ["\u2660", "\u2665", "\u2666", "\u2663"]
+    # suit = ["A", "B", "C", "D"]
+    suit = ["<:aspade:1061103128759521371>", "<:bheart:1061103493773017199>", "<:cdiamond:1061103591730970675>",
+            ":fleur_de_lis:"]
     deck = []
     for i in numbers:
         for j in range(4):
@@ -56,7 +63,7 @@ def distribute_cards(game_deck):
     return [dizhu_cards, p1cards, p2cards, p3cards]
 
 
-def turn(playerslist, priority):
+async def turn(playerslist, priority):
     """
     playerslist: all players. - List[User]
     priority: the one who is the first of a round. - int index of curr player
@@ -94,76 +101,115 @@ def turn(playerslist, priority):
         else:
             pass
 
-players = []
-for i in range(3):
+
+client = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+@client.event
+async def on_ready():
+    print("doudizhu.py online")
+
+
+inp = ""
+
+@client.event
+async def on_message(msg):
+
+    if msg.content.startswith(">"):
+        global inp
+        inp = msg
+        print(msg)
+    await client.process_commands(msg)
+
+@client.command()
+async def start(ctx):
+    await ctx.reply("Game started")
+
+    chan1 = client.get_channel(1061044080848666634)
+    chan2 = client.get_channel(1061044227372494971)
+    chan3 = client.get_channel(1061044465042731148)
+    channels = [chan1, chan2, chan3]
+
+    for chan in channels:
+        await chan.send("_ _")
+        await chan.send(" ----------------------- New Game -----------------------  ")
+
+    players = []
+    for i in range(3):
+        print()
+        # print("Player number", i + 1)
+        await channels[i].send("What is your name?")
+        await channels[i].send("Player number " + str(i + 1))
+        name = await client.wait_for('message')
+        players.append(c.User(name.content, i, 0, [], False))
+
+    # print("\n\n")
+
+    starting_deck = generate_deck()
+    for card in starting_deck:
+        card.print(channels[0])
+    split_deck = distribute_cards(starting_deck)
+
+    # Associate the player with one hand of cards
+    for i, player in enumerate(players):
+        player.deck = c.Deck(split_deck[i + 1])
+        # print("Deck of", player.name, ":")
+        await channels[i].send("Deck of " + player.name + ": ")
+        await player.deck.print(channels[i])
+
+
+    # the equivalent of flipping a card during card distribution to see who gets dizhu priority
+    dizhu = random.randint(0, 2)
+    print("Player", players[dizhu].name, "gets 地主 priority")
     print()
-    print("Player number", i + 1)
-    name = input("What is your name? ")
-    players.append(c.User(name, i, 0, [], False))
 
-print("\n\n")
+    # 叫地主
+    points = [-1, -1, -1]
+    for i, player in enumerate(players):
+        print()
+        print("Player", player.name)
 
-starting_deck = generate_deck()
-split_deck = distribute_cards(starting_deck)
+        # Friendly reminder for dizhu wanters
+        if i != 0 and i != dizhu:
+            print("You must call higher than", max(points), "if you want to be the 地主")
+        point = int(input("How many points would you like to call? (1 - 3) > "))
+        points[i] = point
 
-# Associate the player with one hand of cards
-for i, player in enumerate(players):
-    player.deck = c.Deck(split_deck[i + 1])
-    print("Deck of", player.name, ":")
-    print(player.deck)
-
-
-# the equivalent of flipping a card during card distribution to see who gets dizhu priority
-dizhu = random.randint(0, 2)
-print("Player", players[dizhu].name, "gets 地主 priority")
-print()
-
-# 叫地主
-points = [-1, -1, -1]
-for i, player in enumerate(players):
-    print()
-    print("Player", player.name)
-
-    # Friendly reminder for dizhu wanters
-    if i != 0 and i != dizhu:
-        print("You must call higher than", max(points), "if you want to be the 地主")
-    point = int(input("How many points would you like to call? (1 - 3) > "))
-    points[i] = point
-
-    if point == 3 and i == dizhu:
-        player.dizhu = True
-        dizhu = i
-        break
-
-maxVal = max(points)
-if points[dizhu] == maxVal:
-    print()
-    print("Player", players[dizhu].name, "is the 地主")
-    players[dizhu].dizhu = True
-else:
-    for i in range(len(points)):
-        if points[i] == maxVal:
-            print()
-            print("Player", players[i].name, "is the 地主")
-            players[i].dizhu = True
+        if point == 3 and i == dizhu:
+            player.dizhu = True
             dizhu = i
             break
 
-print(players[dizhu].deck)
-# Reveal dizhu cards
-print("The dizhu cards are: ")
-print(c.Deck(split_deck[0]))
+    maxVal = max(points)
+    if points[dizhu] == maxVal:
+        print()
+        print("Player", players[dizhu].name, "is the 地主")
+        players[dizhu].dizhu = True
+    else:
+        for i in range(len(points)):
+            if points[i] == maxVal:
+                print()
+                print("Player", players[i].name, "is the 地主")
+                players[i].dizhu = True
+                dizhu = i
+                break
 
-# Add the 3 cards into dizhu deck
-players[dizhu].deck.extend(split_deck[0])
-print("The dizhu's cards after extend are: ")
-print(players[dizhu].deck)
+    print(players[dizhu].deck)
+    # Reveal dizhu cards
+    print("The dizhu cards are: ")
+    print(c.Deck(split_deck[0]))
+
+    # Add the 3 cards into dizhu deck
+    players[dizhu].deck.extend(split_deck[0])
+    print("The dizhu's cards after extend are: ")
+    print(players[dizhu].deck)
 
 
-print("\n\n    --------  new game  --------    \n")
-# turn是一种牌的回合
-# 如果回合结束的话开启下一个turn
-while dizhu < 100:
-    dizhu = turn(players, dizhu)
-print("Congratulations player" ,players[dizhu%100])
+    print("\n\n    --------  new game  --------    \n")
+    # turn是一种牌的回合
+    # 如果回合结束的话开启下一个turn
+    while dizhu < 100:
+        dizhu = turn(players, dizhu)
+    print("Congratulations player" ,players[dizhu%100])
+
+
+client.run('MTA2MTAwMDg2NDgyMDY0NTg4OQ.GDMsA8.kpXKP8G1EVqMpYFgcfHl3c2MayDQ_RCT-PqaXM')
 
