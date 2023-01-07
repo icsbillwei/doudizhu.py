@@ -1,3 +1,6 @@
+import asyncio
+
+
 class Card:
     string = ""
     val = 0
@@ -96,7 +99,7 @@ class Deck:
         # Sort again
         self.card_list.sort(key=lambda x: (x.val, x.suit))
 
-    def play_card(self, values, last):
+    async def play_card(self, values, last, chan):
         """
         values: list[int]
         last: list[Cards] played last time
@@ -112,27 +115,36 @@ class Deck:
                 # print("idx:", idx)
                 removed_deck.append(self.card_list.pop(idx))
             except ValueError:
-                print("Invalid input: card not found in your deck")
+                # print("Invalid input: card not found in your deck")
+                await chan.send("**Invalid input**: card not found in your deck")
                 self.card_list = originaldeck
                 return None
 
         removed_deck.sort(key=lambda x: (x.val, x.suit))
-        print("Type of hand:", Deck(removed_deck).identify_type())
+        # print("Type of hand:", Deck(removed_deck).identify_type())
+        try:
+            await chan.send("Type of hand you played: " + Deck(removed_deck).identify_type())  # debug
+        except TypeError:
+            pass
+
         if len(last) == 0 and (Deck(removed_deck).identify_type() is not None):  # if the input is first in the round
             return removed_deck
         elif len(last) == 0:  # if the input is first in the round
-            print("Invalid input: not a valid set of cards to play")
+            # print("Invalid input: not a valid set of cards to play")
+            await chan.send("**Invalid input**: not a valid set of cards to play")
             self.card_list = originaldeck
             return None
         else:  # looks at the card last person played
             if valid_play(last, removed_deck) is True:
                 return removed_deck
             elif valid_play(last, removed_deck) is False:
-                print("The cards you played are not bigger than the previous player")
+                # print("The cards you played are not bigger than the previous player")
+                await chan.send("**Invalid input**: The cards you played are not bigger than the previous player")
                 self.card_list = originaldeck
                 return None
             else:
-                print("That was not a valid set of cards to play on top of the previous ones")
+                # print("That was not a valid set of cards to play on top of the previous ones")
+                await chan.send("That was not a valid set of cards to play on top of the previous ones")
                 self.card_list = originaldeck
                 return None
 
@@ -218,27 +230,60 @@ class User:
         self.deck = player_deck
         self.dizhu = dizhu
 
-    def play_turn(self, last_move):
-        print("\n-------------------------------\n")
-        print("It's " + self.name + "\'s turn now (player number", str(self.order + 1) + ")")
+    async def play_turn(self, last_move, chan, channels, client):
+        # print("\n-------------------------------\n")
+        # print("It's " + self.name + "\'s turn now (player number", str(self.order + 1) + ")")
+        for chn in channels:
+            if chn == chan:
+                await chn.send("**It's your turn now**")
+            else:
+                await chn.send("It's " + self.name + "\'s turn now (player number " + str(self.order + 1) + ")")
+            await asyncio.sleep(0.3)
+
         valid_input = False
         while valid_input is False:  # exit loop until a valid input is received
-            print("\n" + self.name + "\'s current deck:")
-            print(self.deck)
+            # print("\n" + self.name + "\'s current deck:")
+            # print(self.deck)
+            await chan.send("Your current deck: ")
+            await self.deck.print(chan)
+
             if len(last_move) != 0:
-                print("\n You must play a hand that is larger than:")
+                # print("\n You must play a hand that is larger than:")
+                await chan.send("You must play a hand that is larger than: ")
                 last = Deck(last_move)
-                print(last)
-            print("\nWhat's your move? (Type in values of your move, separated with space, or type p to pass.)")
-            move = input(self.name + " > ").upper().split(" ")
+                await last.print(chan)
+
+            # print("\nWhat's your move? (Type in values of your move, separated with space, or type p to pass.)")
+            await chan.send("What's your move? (Type in values of your move, separated with space, or type p to pass.)")
+            await asyncio.sleep(0.3)
+            await chan.send("Example: \"3 3 4 4 5 5\". (Note: black joker and red joker (小王/大王) are bj and rj)")
+            await asyncio.sleep(0.3)
+            await chan.send("**Type Below:**")
+            # move = input(self.name + " > ").upper().split(" ")
+            def check(m):
+                return m.channel == chan
+
+            moveMsg = await client.wait_for('message', check=check)
+            move = moveMsg.content.upper().split(" ")
+
             if move == ["P"]:
                 return []
-            played = self.deck.play_card(move, last_move)  # if input is valid
+            played = await self.deck.play_card(move, last_move, chan)  # if input is valid
             if played is not None:
-                print(self.name + " has played:")
-                print(Deck(played))
-                print(self.name + "'s updated deck is:")
-                print(self.deck)
+                # print(self.name + " has played:")
+                # print(Deck(played))
+                # print(self.name + "'s updated deck is:")
+                # print(self.deck)
+                for chn in channels:
+                    if chn == chan:
+                        await chn.send("You played:")
+                    else:
+                        await chn.send(self.name + " has played:")
+                    await Deck(played).print(chn)
+                    await asyncio.sleep(0.3)
+                await chan.send("Your updated deck is:")
+                await self.deck.print(chan)
+
                 return played
 
     def __str__(self):
