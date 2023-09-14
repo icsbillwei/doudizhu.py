@@ -286,5 +286,5 @@ async def start(ctx):
             chan.send("The farmers have won this game")
 
 
-client.run('MTA2MTAwMDg2NDgyMDY0NTg4OQ.GDMsA8.kpXKP8G1EVqMpYFgcfHl3c2MayDQ_RCT-PqaXM')
+client.run('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') // discord bot token
 
